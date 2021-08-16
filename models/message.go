@@ -36,6 +36,7 @@ var H = Hub{
 func (h *Hub) Run() {
 	for true {
 		select {
+		//广播消息
 		case m := <-h.Broadcast:
 			conns := h.Rooms[m.Roomid]
 			for con := range conns {
@@ -53,6 +54,7 @@ func (h *Hub) Run() {
 
 				}
 			}
+			//进入聊天室
 		case m := <-h.Join:
 			conns := h.Rooms[m.Roomid]
 			if conns == nil {
@@ -69,6 +71,7 @@ func (h *Hub) Run() {
 				}
 
 			}
+			//退出聊天室
 		case m := <-h.Quit:
 			conns := h.Rooms[m.Roomid]
 			if conns != nil {
@@ -102,7 +105,9 @@ func (m Message) Read() {
 	}()
 
 	c.WsConn.SetReadLimit(512)
+	//读写超时设置为60s
 	c.WsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	//设置pong处理方式
 	c.WsConn.SetPongHandler(func(string) error {
 		c.WsConn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
@@ -116,6 +121,7 @@ func (m Message) Read() {
 			}
 			break
 		}
+		//传入广播通道
 		msg := Message{data, m.Roomid, m.Roomid, c}
 		H.Broadcast <- msg
 	}
